@@ -11,6 +11,12 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@300;400;500;600;700&display=swap"
     rel="stylesheet" />
+  <!-- CryptoJS for Encryption -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <!-- html2canvas for Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- jsPDF for Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     /* ================================================================
@@ -188,6 +194,34 @@
       border-color: var(--accent);
       box-shadow: var(--accent-glow);
       transform: translateY(-2px);
+    }
+
+    .search-filter-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    @media (max-width: 768px) {
+      .search-filter-group { display: none; }
+    }
+    
+    .switch {
+      position: relative; display: inline-block; width: 44px; height: 24px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4); transition: .4s; border-radius: 24px; border: 1px solid var(--border-glass);
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 3px;
+      background-color: var(--text-secondary); transition: .4s; border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--accent-dim); border-color: var(--accent);
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px); background-color: var(--accent); box-shadow: 0 0 10px var(--accent);
     }
 
     /* ================================================================
@@ -1224,6 +1258,15 @@
   <header class="site-header">
     <div class="logo">Memory Journey</div>
     <div class="header-actions">
+      <div class="search-filter-group">
+        <input type="text" id="search-input" class="form-control" placeholder="Search memories..." style="width:200px; padding:6px 12px; min-height:36px;" />
+        <select id="filter-category" class="form-control" style="width:150px; padding:6px 12px; min-height:36px;">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+      <button class="icon-btn" id="btn-export-visual" title="Export Timeline to PDF/PNG">
+        <i class="fas fa-camera"></i>
+      </button>
       <button class="icon-btn" id="btn-settings" title="Settings &amp; Data Management">
         <i class="fas fa-cog"></i>
       </button>
@@ -1335,6 +1378,19 @@
     <h2><i class="fas fa-sliders"></i> Control Panel</h2>
     <div class="section-divider"></div>
 
+    <!-- Audio Settings -->
+    <div class="settings-section">
+      <h3><i class="fas fa-volume-up"></i> Audio Feedback</h3>
+      <p>Enable sci-fi UI sound effects.</p>
+      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--border-glass);">
+        <span>UI Sounds</span>
+        <label class="switch">
+          <input type="checkbox" id="toggle-sounds" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
     <!-- Security Settings -->
     <div class="settings-section">
       <h3><i class="fas fa-shield-halved"></i> Privacy Security</h3>
@@ -1404,6 +1460,13 @@
   </aside>
 
   <!-- ============================================================
+       AUDIO ELEMENTS
+       ============================================================ -->
+  <audio id="sfx-click" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
+  <audio id="sfx-success" src="https://assets.mixkit.co/active_storage/sfx/1081/1081-preview.mp3" preload="auto"></audio>
+  <audio id="sfx-modal" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+
+  <!-- ============================================================
        TOAST CONTAINER
        ============================================================ -->
   <div class="toast-container" id="toast-container"></div>
@@ -1424,6 +1487,7 @@
 
     const LS_KEY_PASSCODE = 'mv_passcode';
     const LS_KEY_LABELS = 'mv_labels';
+    const LS_KEY_SOUND = 'mv_sound';
     const SS_KEY_UNLOCKED = 'mv_unlocked';
 
     const PRESET_ACCENTS = [
@@ -1439,6 +1503,9 @@
     let labels = [];          // Array of label objects
     let confirmCb = null;     // Callback for confirm dialog
     let resizeTimer = null;   // Debounce timer for resize
+    let soundEnabled = true;  // Audio state
+    let currentSearchTerm = '';
+    let currentFilterCategory = '';
 
     /* ================================================================
        DOM REFS
@@ -1467,6 +1534,15 @@
     const btnSettings = $('#btn-settings');
     const settingsPanel = $('#settings-panel');
     const settingsBack = $('#settings-backdrop');
+
+    const searchInput = $('#search-input');
+    const filterCategory = $('#filter-category');
+    const btnExportVisual = $('#btn-export-visual');
+
+    const sfxClick = $('#sfx-click');
+    const sfxSuccess = $('#sfx-success');
+    const sfxModal = $('#sfx-modal');
+    const toggleSounds = $('#toggle-sounds');
 
     const btnExport = $('#btn-export');
     const btnImport = $('#btn-import');
@@ -1526,9 +1602,61 @@
     }
 
     /* ================================================================
+       AUDIO & PARALLAX SYSTEMS
+       ================================================================ */
+    soundEnabled = lsGet(LS_KEY_SOUND, true);
+    if (toggleSounds) {
+      toggleSounds.checked = soundEnabled;
+      toggleSounds.addEventListener('change', (e) => {
+        soundEnabled = e.target.checked;
+        lsSet(LS_KEY_SOUND, soundEnabled);
+        if (soundEnabled) playSound('success');
+      });
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        if (type === 'click' && sfxClick) { sfxClick.currentTime = 0; sfxClick.play().catch(e=>console.warn(e)); }
+        if (type === 'success' && sfxSuccess) { sfxSuccess.currentTime = 0; sfxSuccess.play().catch(e=>console.warn(e)); }
+        if (type === 'modal' && sfxModal) { sfxModal.currentTime = 0; sfxModal.play().catch(e=>console.warn(e)); }
+      } catch (e) {
+        console.warn("Audio error:", e);
+      }
+    }
+
+    // Attach click sound to buttons globally
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.btn, .icon-btn, .fab, .milestone-card, .swatch')) {
+        playSound('click');
+      }
+    }, true);
+
+    // Parallax scrolling
+    journeyScroll.addEventListener('scroll', () => {
+      const bgLayer = $('#bg-layer');
+      const starfield = $('#starfield');
+      if (!bgLayer && !starfield) return;
+      
+      const isMob = isMobileView();
+      const scrolled = isMob ? journeyScroll.scrollTop : journeyScroll.scrollLeft;
+      
+      if (bgLayer) {
+        if (isMob) bgLayer.style.backgroundPosition = `center calc(50% + ${scrolled * 0.1}px)`;
+        else bgLayer.style.backgroundPosition = `calc(50% + ${scrolled * 0.1}px) center`;
+      }
+      
+      if (starfield) {
+        if (isMob) starfield.style.transform = `translateY(${scrolled * -0.05}px)`;
+        else starfield.style.transform = `translateX(${scrolled * -0.05}px)`;
+      }
+    }, { passive: true });
+
+    /* ================================================================
        TOAST NOTIFICATIONS
        ================================================================ */
     function showToast(msg, type = 'success') {
+      if (type === 'success') playSound('success');
       const t = document.createElement('div');
       t.className = `toast toast-${type}`;
       const icon = type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check';
@@ -1597,9 +1725,11 @@
       const newCode = settingsPasscode.value.trim();
       if (newCode) {
         lsSet(LS_KEY_PASSCODE, newCode);
+        if (memories.length > 0) saveMemories();
         showToast('Passcode saved.');
       } else {
         localStorage.removeItem(LS_KEY_PASSCODE);
+        if (memories.length > 0) saveMemories();
         showToast('Passcode removed.');
       }
     });
@@ -1637,6 +1767,15 @@
         html += `<option value="${lb.id}">${escHtml(lb.name)}</option>`;
       });
       fieldLabel.innerHTML = html;
+
+      if (filterCategory) {
+        let filterHtml = '<option value="">All Categories</option>';
+        labels.forEach(lb => {
+          filterHtml += `<option value="${lb.id}">${escHtml(lb.name)}</option>`;
+        });
+        filterCategory.innerHTML = filterHtml;
+        filterCategory.value = currentFilterCategory; // Preserve selection
+      }
     }
 
     btnAddLabel.addEventListener('click', () => {
@@ -1759,11 +1898,40 @@
        MEMORIES CRUD
        ================================================================ */
     function loadMemories() {
-      memories = lsGet(LS_KEY_MEMORIES, []);
+      const savedPasscode = lsGet(LS_KEY_PASSCODE, null);
+      const raw = localStorage.getItem(LS_KEY_MEMORIES);
+      if (!raw) {
+        memories = [];
+        return;
+      }
+      try {
+        if (savedPasscode && typeof CryptoJS !== 'undefined' && raw.startsWith('U2FsdGVkX1')) {
+          const bytes = CryptoJS.AES.decrypt(raw, savedPasscode);
+          memories = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        } else {
+          memories = JSON.parse(raw);
+        }
+      } catch (e) {
+        console.error("Decryption failed", e);
+        memories = [];
+      }
     }
 
     function saveMemories() {
-      lsSet(LS_KEY_MEMORIES, memories);
+      const savedPasscode = lsGet(LS_KEY_PASSCODE, null);
+      let dataStr = JSON.stringify(memories);
+      if (savedPasscode && typeof CryptoJS !== 'undefined') {
+        dataStr = CryptoJS.AES.encrypt(dataStr, savedPasscode).toString();
+      }
+      try {
+        localStorage.setItem(LS_KEY_MEMORIES, dataStr);
+      } catch (e) {
+        if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
+          showToast('Storage limit reached. Please export a backup and remove old memories, or use smaller images.', 'error');
+        } else {
+          showToast('Failed to save data: ' + e.message, 'error');
+        }
+      }
     }
 
     function addMemory(mem) {
@@ -1863,7 +2031,19 @@
        RENDER TIMELINE — builds SVG path + positions milestone cards
        ================================================================ */
     function renderTimeline() {
-      const n = memories.length;
+      const filteredMemories = memories.filter(m => {
+        if (currentFilterCategory && m.label !== currentFilterCategory) return false;
+        if (currentSearchTerm) {
+          const s = currentSearchTerm;
+          const matchTitle = (m.title || '').toLowerCase().includes(s);
+          const matchDesc = (m.description || '').toLowerCase().includes(s);
+          const matchLoc = (m.location || '').toLowerCase().includes(s);
+          if (!matchTitle && !matchDesc && !matchLoc) return false;
+        }
+        return true;
+      });
+
+      const n = filteredMemories.length;
 
       if (n === 0) {
         timeline.style.width = '';
@@ -1895,7 +2075,7 @@
       </svg>`;
 
       // Build milestone cards + dots + connectors
-      memories.forEach((m, i) => {
+      filteredMemories.forEach((m, i) => {
         const wp = waypoints[i];
         const thumbHTML = m.thumbnail
           ? `<img class="milestone-thumb" src="${escHtml(m.thumbnail)}" alt="${escHtml(m.title)}" loading="lazy" />`
@@ -2073,6 +2253,7 @@
     let pendingImageData = null;
 
     function openModal(editData = null) {
+      playSound('modal');
       memoryForm.reset();
       imagePreview.classList.remove('visible');
       imageName.textContent = 'No file chosen';
@@ -2187,7 +2368,7 @@
     btnExport.addEventListener('click', () => {
       const payload = {
         _meta: { app: 'MemoryJourneyVault', exportedAt: new Date().toISOString() },
-        memories: lsGet(LS_KEY_MEMORIES, []),
+        memories: memories,
         accent: lsGet(LS_KEY_ACCENT, null),
         background: lsGet(LS_KEY_BG, null)
       };
@@ -2202,6 +2383,43 @@
       URL.revokeObjectURL(url);
       showToast('Backup exported!');
     });
+
+    /* ---- Visual Export (PDF) ---- */
+    if (btnExportVisual) {
+      btnExportVisual.addEventListener('click', async () => {
+        if (memories.length === 0) return showToast('No memories to export', 'error');
+        try {
+          showToast('Generating PDF...');
+          document.querySelectorAll('.milestone-actions').forEach(el => el.style.display = 'none');
+          
+          const canvas = await html2canvas(timeline, {
+            backgroundColor: lsGet(LS_KEY_BG, null) ? null : '#0a0a0a',
+            scale: 1.5,
+            useCORS: true
+          });
+          
+          document.querySelectorAll('.milestone-actions').forEach(el => el.style.display = 'flex');
+          
+          const imgData = canvas.toDataURL('image/jpeg', 0.8);
+          const { jsPDF } = window.jspdf;
+          
+          const pdf = new jsPDF({
+            orientation: canvas.width > canvas.height ? 'l' : 'p',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+          });
+          
+          pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+          pdf.save('Memory-Journey-Timeline.pdf');
+          
+          showToast('PDF Exported Successfully!');
+        } catch (err) {
+          console.error("Export error", err);
+          document.querySelectorAll('.milestone-actions').forEach(el => el.style.display = 'flex');
+          showToast('Export failed: ' + err.message, 'error');
+        }
+      });
+    }
 
     /* ---- Import ---- */
     btnImport.addEventListener('click', () => importInput.click());
@@ -2425,6 +2643,13 @@
       }
     });
 
+    journeyScroll.addEventListener('mouseleave', () => {
+      if (isDragging) {
+        isDragging = false;
+        journeyScroll.classList.remove('grabbing');
+      }
+    });
+
     /* ================================================================
        YEAR SCRUBBER — dynamic minimap navigation
        Builds year buttons from existing milestones. Clicking a year
@@ -2530,6 +2755,20 @@
     /* ================================================================
        INIT — Bootstrap application
        ================================================================ */
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        currentSearchTerm = e.target.value.trim().toLowerCase();
+        renderTimeline();
+      });
+    }
+
+    if (filterCategory) {
+      filterCategory.addEventListener('change', (e) => {
+        currentFilterCategory = e.target.value;
+        renderTimeline();
+      });
+    }
+
     function init() {
       generateStars();
       renderAccentSwatches();
