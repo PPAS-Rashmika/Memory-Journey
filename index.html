@@ -94,7 +94,7 @@
     /* ================================================================
        SCROLLBAR
        ================================================================ */
-    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb {
       background: var(--accent-dim);
@@ -197,94 +197,94 @@
     }
 
     /* ================================================================
-       TIMELINE
+       WINDING ROAD — JOURNEY SCROLL (Desktop: horizontal, Mobile: vertical)
        ================================================================ */
-    .timeline-container {
+    .journey-scroll {
       position: relative;
       z-index: 1;
-      max-width: 880px;
-      margin: 0 auto;
-      padding: 60px 20px 120px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      cursor: grab;
+      /* Hide the default scrollbar — we use the year scrubber instead */
+      scrollbar-width: none; /* Firefox */
+    }
+    .journey-scroll::-webkit-scrollbar { display: none; }
+    .journey-scroll.grabbing {
+      cursor: grabbing;
+      user-select: none;
     }
 
-    /* The glowing vertical spine */
-    .timeline-container::before {
-      content: '';
+    .journey-canvas {
+      position: relative;
+      min-height: 100px;
+    }
+
+    /* The SVG path layer */
+    .journey-svg {
       position: absolute;
       top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 3px;
-      height: 100%;
-      background: linear-gradient(180deg,
-        transparent 0%,
-        var(--accent) 8%,
-        var(--accent) 92%,
-        transparent 100%);
-      box-shadow: 0 0 12px var(--accent), 0 0 30px rgba(0,229,255,0.15);
-      border-radius: 2px;
+      left: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .journey-path {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 3;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 8px var(--accent)) drop-shadow(0 0 24px rgba(0,229,255,0.15));
+    }
+
+    /* Faint secondary glow path for extra depth */
+    .journey-path-glow {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 8;
+      stroke-linecap: round;
+      opacity: 0.12;
+      filter: blur(4px);
     }
 
     /* ================================================================
-       MILESTONE NODE
+       MILESTONE NODE — positioned absolutely on the canvas
        ================================================================ */
     .milestone {
-      position: relative;
-      width: 45%;
-      padding: 0;
-      margin-bottom: 64px;
+      position: absolute;
+      width: 270px;
+      z-index: 3;
       /* Scroll-reveal initial state */
       opacity: 0;
-      transform: translateY(40px);
-      transition: opacity 0.7s ease, transform 0.7s ease;
+      transform: scale(0.92);
+      transition: opacity 0.65s ease, transform 0.65s ease;
     }
     .milestone.visible {
       opacity: 1;
-      transform: translateY(0);
+      transform: scale(1);
     }
 
-    /* Alternate left/right */
-    .milestone:nth-child(odd) {
-      margin-left: 5%;
-    }
-    .milestone:nth-child(even) {
-      margin-left: 50%;
-    }
-
-    /* Dot on the spine */
-    .milestone::before {
-      content: '';
+    /* Glowing dot on the path */
+    .milestone-dot {
       position: absolute;
-      top: 24px;
       width: 16px;
       height: 16px;
       background: var(--accent);
       border: 3px solid var(--bg-primary);
       border-radius: 50%;
       box-shadow: 0 0 14px var(--accent), 0 0 40px rgba(0,229,255,0.18);
-      z-index: 2;
-    }
-    .milestone:nth-child(odd)::before {
-      right: -33px;
-    }
-    .milestone:nth-child(even)::before {
-      left: -33px;
+      z-index: 5;
+      pointer-events: none;
     }
 
-    /* Connector line to dot */
-    .milestone::after {
-      content: '';
+    /* Connector line from dot to card */
+    .milestone-connector {
       position: absolute;
-      top: 30px;
-      width: 24px;
-      height: 2px;
-      background: var(--accent-dim);
-    }
-    .milestone:nth-child(odd)::after {
-      right: -24px;
-    }
-    .milestone:nth-child(even)::after {
-      left: -24px;
+      background: linear-gradient(to bottom, var(--accent), transparent);
+      width: 2px;
+      z-index: 2;
+      opacity: 0.5;
+      pointer-events: none;
     }
 
     /* Card */
@@ -306,59 +306,84 @@
 
     .milestone-thumb {
       width: 100%;
-      height: 180px;
+      height: 140px;
       object-fit: cover;
       display: block;
       border-bottom: 1px solid var(--border-glass);
     }
 
     .milestone-body {
-      padding: 20px;
+      padding: 16px;
     }
     .milestone-date {
       font-family: var(--font-display);
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       letter-spacing: 2px;
       color: var(--accent);
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       display: flex;
       align-items: center;
       gap: 6px;
     }
     .milestone-title {
       font-family: var(--font-display);
-      font-size: 1rem;
+      font-size: 0.88rem;
       font-weight: 600;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       letter-spacing: 1px;
     }
     .milestone-desc {
       color: var(--text-secondary);
-      font-size: 0.95rem;
-      line-height: 1.5;
-      margin-bottom: 16px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      margin-bottom: 10px;
       word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Location link */
+    .milestone-location {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--accent);
+      text-decoration: none;
+      margin-bottom: 10px;
+      transition: var(--transition);
+      cursor: pointer;
+      opacity: 0.85;
+    }
+    .milestone-location:hover {
+      opacity: 1;
+      text-shadow: 0 0 8px var(--accent);
+    }
+    .milestone-location i {
+      font-size: 0.75rem;
     }
 
     .milestone-actions {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
     .btn {
       font-family: var(--font-body);
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 600;
       letter-spacing: 1px;
-      padding: 8px 18px;
+      padding: 7px 14px;
       border-radius: 10px;
       border: 1px solid var(--border-glass);
       cursor: pointer;
       transition: var(--transition);
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       text-decoration: none;
     }
 
@@ -764,40 +789,98 @@
     }
 
     /* ================================================================
-       RESPONSIVE — MOBILE
+       YEAR SCRUBBER — frosted-glass minimap at bottom of screen
+       ================================================================ */
+    .year-scrubber {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 80;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 10px 24px;
+      background: rgba(8, 10, 22, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-glass);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .year-scrubber.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(100%);
+    }
+
+    .scrubber-btn {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-glass);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .scrubber-btn:hover,
+    .scrubber-btn.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: rgba(0,229,255,0.08);
+      box-shadow: 0 0 12px rgba(0,229,255,0.15);
+    }
+
+    /* Track indicator line between scrubber buttons */
+    .scrubber-track {
+      flex: 1;
+      max-width: 40px;
+      height: 2px;
+      background: var(--border-glass);
+      border-radius: 1px;
+    }
+
+    /* ================================================================
+       RESPONSIVE — MOBILE (vertical winding road)
        ================================================================ */
     @media (max-width: 700px) {
       .site-header { padding: 14px 16px; }
 
-      .timeline-container::before {
-        left: 20px;
-        transform: none;
+      /* Switch from horizontal scroll to vertical page scroll */
+      .journey-scroll {
+        overflow-x: hidden;
+        overflow-y: visible;
+        cursor: auto;
       }
 
-      .milestone,
-      .milestone:nth-child(odd),
-      .milestone:nth-child(even) {
-        width: calc(100% - 48px);
-        margin-left: 48px;
-      }
-
-      .milestone::before,
-      .milestone:nth-child(odd)::before,
-      .milestone:nth-child(even)::before {
-        left: -36px;
-        right: auto;
-      }
-
-      .milestone::after,
-      .milestone:nth-child(odd)::after,
-      .milestone:nth-child(even)::after {
-        left: -20px;
-        right: auto;
-        width: 16px;
+      .milestone {
+        width: calc(50vw - 40px);
+        min-width: 180px;
       }
 
       .modal { padding: 24px 18px; max-height: 85vh; }
       .fab { bottom: 20px; right: 20px; width: 54px; height: 54px; font-size: 1.3rem; }
+
+      .milestone-thumb { height: 100px; }
+      .milestone-body { padding: 12px; }
+      .milestone-title { font-size: 0.8rem; }
+      .milestone-desc { font-size: 0.8rem; -webkit-line-clamp: 2; }
+      .milestone-date { font-size: 0.6rem; }
+
+      /* Hide year scrubber on mobile — vertical scroll is natural */
+      .year-scrubber { display: none; }
+    }
+
+    @media (max-width: 420px) {
+      .milestone {
+        width: calc(50vw - 30px);
+        min-width: 150px;
+      }
+      .milestone-thumb { height: 80px; }
     }
 
     /* Ensure modal inputs stay visible when virtual keyboard opens */
@@ -844,11 +927,16 @@
   </header>
 
   <!-- ============================================================
-       TIMELINE
+       WINDING ROAD TIMELINE
        ============================================================ -->
-  <main>
-    <div class="timeline-container" id="timeline"></div>
+  <main class="journey-scroll" id="journey-scroll">
+    <div class="journey-canvas" id="timeline"></div>
   </main>
+
+  <!-- ============================================================
+       YEAR SCRUBBER — navigation minimap
+       ============================================================ -->
+  <nav class="year-scrubber hidden" id="year-scrubber"></nav>
 
   <!-- ============================================================
        FAB — Add New Memory
@@ -882,6 +970,11 @@
         <div class="form-group">
           <label for="mem-desc">Description</label>
           <textarea id="mem-desc" class="form-control" placeholder="What happened? How did it feel?"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="mem-location"><i class="fas fa-map-pin" style="color:var(--accent);margin-right:4px;"></i> Location</label>
+          <input type="text" id="mem-location" class="form-control" placeholder="City, Country or address..." />
         </div>
 
         <div class="form-group">
@@ -999,11 +1092,13 @@
 
     let memories = [];        // Array of memory objects
     let confirmCb = null;     // Callback for confirm dialog
+    let resizeTimer = null;   // Debounce timer for resize
 
     /* ================================================================
        DOM REFS
        ================================================================ */
     const $ = (sel) => document.querySelector(sel);
+    const journeyScroll  = $('#journey-scroll');
     const timeline       = $('#timeline');
     const fabAdd         = $('#fab-add');
     const modalOverlay   = $('#modal-overlay');
@@ -1016,6 +1111,7 @@
     const fieldDate      = $('#mem-date');
     const fieldTitle     = $('#mem-title');
     const fieldDesc      = $('#mem-desc');
+    const fieldLocation  = $('#mem-location');
     const fieldImage     = $('#mem-image');
     const fieldUrl       = $('#mem-url');
     const imageName      = $('#image-name');
@@ -1044,6 +1140,13 @@
 
     const bgLayer        = $('#bg-layer');
     const toastContainer = $('#toast-container');
+
+    /* ================================================================
+       LAYOUT DETECTION
+       ================================================================ */
+    function isMobileView() {
+      return window.innerWidth <= 700;
+    }
 
     /* ================================================================
        STARFIELD GENERATION
@@ -1119,8 +1222,6 @@
 
     /* ================================================================
        IMAGE COMPRESSION via Canvas
-       Resizes + re-encodes to JPEG at reduced quality to stay within
-       localStorage budget.
        ================================================================ */
     function compressImage(file) {
       return new Promise((resolve, reject) => {
@@ -1132,8 +1233,6 @@
           img.onerror = () => reject(new Error('Image decode failed'));
           img.onload = () => {
             let { width, height } = img;
-
-            // Scale down proportionally
             if (width > MAX_IMG_WIDTH) {
               height = Math.round(height * (MAX_IMG_WIDTH / width));
               width = MAX_IMG_WIDTH;
@@ -1142,16 +1241,11 @@
               width = Math.round(width * (MAX_IMG_HEIGHT / height));
               height = MAX_IMG_HEIGHT;
             }
-
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            // Encode as JPEG
-            const dataUrl = canvas.toDataURL('image/jpeg', IMG_QUALITY);
-            resolve(dataUrl);
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', IMG_QUALITY));
           };
           img.src = e.target.result;
         };
@@ -1159,7 +1253,6 @@
       });
     }
 
-    /* Compress background images more aggressively */
     function compressBgImage(file) {
       return new Promise((resolve, reject) => {
         if (!file) return resolve(null);
@@ -1204,8 +1297,7 @@
 
     function addMemory(mem) {
       memories.push(mem);
-      // Sort by date descending (newest first)
-      memories.sort((a, b) => new Date(b.date) - new Date(a.date));
+      memories.sort((a, b) => new Date(a.date) - new Date(b.date));
       saveMemories();
     }
 
@@ -1213,7 +1305,7 @@
       const idx = memories.findIndex(m => m.id === id);
       if (idx !== -1) {
         memories[idx] = { ...memories[idx], ...data };
-        memories.sort((a, b) => new Date(b.date) - new Date(a.date));
+        memories.sort((a, b) => new Date(a.date) - new Date(b.date));
         saveMemories();
       }
     }
@@ -1228,35 +1320,202 @@
     }
 
     /* ================================================================
-       RENDER TIMELINE
+       WINDING PATH ENGINE
+       Generates an S-curve SVG path and computes waypoints for each
+       milestone. Automatically recalculates when milestones change.
+       ================================================================ */
+    function generateWindingPath(count, mobile) {
+      if (count === 0) return { d: '', waypoints: [], width: 0, height: 0 };
+
+      const PAD = 100; // padding at start/end of canvas
+
+      if (mobile) {
+        /* ---- VERTICAL S-CURVE (mobile) ---- */
+        const segH = 380;
+        const vw = window.innerWidth;
+        const centerX = vw / 2;
+        const amp = Math.min(vw * 0.18, 70);
+        const canvasW = vw;
+        const canvasH = PAD * 2 + Math.max(0, count - 1) * segH;
+
+        const waypoints = [];
+        for (let i = 0; i < count; i++) {
+          waypoints.push({
+            x: centerX + (i % 2 === 0 ? -amp : amp),
+            y: PAD + i * segH
+          });
+        }
+
+        // Build smooth cubic Bezier S-curve
+        let d = `M ${waypoints[0].x.toFixed(1)} ${waypoints[0].y.toFixed(1)}`;
+        for (let i = 1; i < waypoints.length; i++) {
+          const p = waypoints[i - 1];
+          const c = waypoints[i];
+          const cpOff = segH * 0.45;
+          d += ` C ${p.x.toFixed(1)} ${(p.y + cpOff).toFixed(1)}, ${c.x.toFixed(1)} ${(c.y - cpOff).toFixed(1)}, ${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
+        }
+
+        return { d, waypoints, width: canvasW, height: canvasH };
+
+      } else {
+        /* ---- HORIZONTAL S-CURVE (desktop) ---- */
+        const segW = 400;
+        const canvasH = 760;
+        const centerY = canvasH / 2;
+        const amp = 150;
+        const canvasW = PAD * 2 + Math.max(0, count - 1) * segW;
+
+        const waypoints = [];
+        for (let i = 0; i < count; i++) {
+          waypoints.push({
+            x: PAD + i * segW,
+            y: centerY + (i % 2 === 0 ? -amp : amp)
+          });
+        }
+
+        // Build smooth cubic Bezier S-curve
+        let d = `M ${waypoints[0].x.toFixed(1)} ${waypoints[0].y.toFixed(1)}`;
+        for (let i = 1; i < waypoints.length; i++) {
+          const p = waypoints[i - 1];
+          const c = waypoints[i];
+          const cpOff = segW * 0.45;
+          d += ` C ${(p.x + cpOff).toFixed(1)} ${p.y.toFixed(1)}, ${(c.x - cpOff).toFixed(1)} ${c.y.toFixed(1)}, ${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
+        }
+
+        return { d, waypoints, width: canvasW, height: canvasH };
+      }
+    }
+
+    /* ================================================================
+       RENDER TIMELINE — builds SVG path + positions milestone cards
        ================================================================ */
     function renderTimeline() {
-      if (memories.length === 0) {
+      const n = memories.length;
+
+      if (n === 0) {
+        timeline.style.width = '';
+        timeline.style.height = '';
         timeline.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon"><i class="fas fa-rocket"></i></div>
             <h2>No Memories Yet</h2>
             <p>Start your journey by tapping the <strong>+</strong> button to add your first memory node.</p>
           </div>`;
+        // Hide scrubber when no data
+        const scrub = document.getElementById('year-scrubber');
+        if (scrub) scrub.classList.add('hidden');
         return;
       }
 
-      timeline.innerHTML = memories.map(m => {
+      const mobile = isMobileView();
+      const { d, waypoints, width, height } = generateWindingPath(n, mobile);
+
+      // Size the canvas
+      timeline.style.width = mobile ? '100%' : width + 'px';
+      timeline.style.height = height + 'px';
+
+      // Build the SVG
+      const svgNS = 'http://www.w3.org/2000/svg';
+      let html = `<svg class="journey-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="${svgNS}">
+        <path class="journey-path-glow" d="${d}" />
+        <path class="journey-path" d="${d}" />
+      </svg>`;
+
+      // Build milestone cards + dots + connectors
+      memories.forEach((m, i) => {
+        const wp = waypoints[i];
         const thumbHTML = m.thumbnail
-          ? `<img class="milestone-thumb" src="${m.thumbnail}" alt="${escHtml(m.title)}" loading="lazy" />`
+          ? `<img class="milestone-thumb" src="${escHtml(m.thumbnail)}" alt="${escHtml(m.title)}" loading="lazy" />`
           : '';
         const vaultBtn = m.url
           ? `<a href="${escHtml(m.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-accent"><i class="fas fa-vault"></i> Open Vault</a>`
           : '';
+        const locationHTML = m.location
+          ? `<a class="milestone-location" href="https://www.google.com/maps/search/${encodeURIComponent(m.location)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-pin"></i> ${escHtml(m.location)}</a>`
+          : '';
         const dateStr = formatDate(m.date);
 
-        return `
-          <div class="milestone" data-id="${m.id}">
+        // Compute card position relative to waypoint
+        let cardLeft, cardTop;
+        const CARD_W = mobile ? (window.innerWidth * 0.5 - 30) : 270;
+        const CONNECTOR_LEN = 30;
+
+        if (mobile) {
+          // Vertical layout: alternate cards left/right
+          if (i % 2 === 0) {
+            // Dot is left of center → card to the right
+            cardLeft = wp.x + CONNECTOR_LEN;
+            cardTop = wp.y - 40;
+          } else {
+            // Dot is right of center → card to the left
+            cardLeft = wp.x - CARD_W - CONNECTOR_LEN;
+            cardTop = wp.y - 40;
+          }
+        } else {
+          // Horizontal layout: alternate cards above/below
+          cardLeft = wp.x - CARD_W / 2;
+          if (i % 2 === 0) {
+            // Dot is above center → card above dot
+            cardTop = wp.y - CONNECTOR_LEN - 280;
+            if (cardTop < 8) cardTop = 8;
+          } else {
+            // Dot is below center → card below dot
+            cardTop = wp.y + CONNECTOR_LEN;
+          }
+        }
+
+        // Connector line from dot to card edge
+        let connLeft, connTop, connW, connH, connGrad;
+        if (mobile) {
+          // Horizontal connector
+          if (i % 2 === 0) {
+            connLeft = wp.x + 8;
+            connTop = wp.y + 4;
+            connW = CONNECTOR_LEN - 8;
+            connH = 2;
+          } else {
+            connLeft = wp.x - CONNECTOR_LEN + 8;
+            connTop = wp.y + 4;
+            connW = CONNECTOR_LEN - 8;
+            connH = 2;
+          }
+          connGrad = 'linear-gradient(to right, var(--accent), transparent)';
+        } else {
+          // Vertical connector
+          if (i % 2 === 0) {
+            // Card is above, connector goes from card bottom to dot
+            connLeft = wp.x - 1;
+            connTop = cardTop + 280 > wp.y - 10 ? wp.y - 10 : cardTop + 260;
+            connH = wp.y - connTop - 6;
+            connW = 2;
+          } else {
+            // Card is below, connector goes from dot to card top
+            connLeft = wp.x - 1;
+            connTop = wp.y + 10;
+            connH = cardTop - wp.y - 10;
+            connW = 2;
+          }
+          connGrad = 'linear-gradient(to bottom, var(--accent), transparent)';
+          if (connH < 0) connH = 0;
+        }
+
+        // Dot
+        html += `<div class="milestone-dot" style="left:${(wp.x - 8).toFixed(1)}px;top:${(wp.y - 8).toFixed(1)}px;"></div>`;
+
+        // Connector
+        if (connH > 0 || connW > 2) {
+          html += `<div class="milestone-connector" style="left:${connLeft.toFixed(1)}px;top:${connTop.toFixed(1)}px;width:${connW}px;height:${connH}px;background:${connGrad};"></div>`;
+        }
+
+        // Card
+        html += `
+          <div class="milestone" data-id="${m.id}" style="left:${cardLeft.toFixed(1)}px;top:${cardTop.toFixed(1)}px;${mobile ? 'width:' + CARD_W + 'px;' : ''}">
             <div class="milestone-card">
               ${thumbHTML}
               <div class="milestone-body">
                 <div class="milestone-date"><i class="fas fa-clock"></i> ${dateStr}</div>
                 <div class="milestone-title">${escHtml(m.title)}</div>
+                ${locationHTML}
                 <div class="milestone-desc">${escHtml(m.description || '')}</div>
                 <div class="milestone-actions">
                   ${vaultBtn}
@@ -1266,10 +1525,12 @@
               </div>
             </div>
           </div>`;
-      }).join('');
+      });
 
-      // Re-observe for scroll-reveal
+      timeline.innerHTML = html;
       observeNodes();
+      // Rebuild the year scrubber to reflect current milestones
+      if (typeof buildYearScrubber === 'function') buildYearScrubber();
     }
 
     function escHtml(str) {
@@ -1280,8 +1541,8 @@
 
     function formatDate(dateStr) {
       try {
-        const d = new Date(dateStr + 'T00:00:00');
-        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const dt = new Date(dateStr + 'T00:00:00');
+        return dt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       } catch {
         return dateStr;
       }
@@ -1289,10 +1550,14 @@
 
     /* ================================================================
        INTERSECTION OBSERVER — scroll-reveal for milestones
+       Uses the journey-scroll container as root on desktop (horizontal
+       scroll), and the viewport on mobile (normal page scroll).
        ================================================================ */
     let observer;
     function observeNodes() {
       if (observer) observer.disconnect();
+
+      const root = isMobileView() ? null : journeyScroll;
       observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
@@ -1300,10 +1565,25 @@
             observer.unobserve(entry.target);
           }
         });
-      }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+      }, { root, threshold: 0.1, rootMargin: '0px 60px 0px 60px' });
 
       document.querySelectorAll('.milestone').forEach(el => observer.observe(el));
     }
+
+    /* ================================================================
+       WINDOW RESIZE — debounced re-render for layout switch
+       ================================================================ */
+    let lastMobileState = isMobileView();
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const nowMobile = isMobileView();
+        if (nowMobile !== lastMobileState) {
+          lastMobileState = nowMobile;
+          renderTimeline();
+        }
+      }, 250);
+    });
 
     /* ================================================================
        MODAL — Open / Close / Submit
@@ -1323,6 +1603,7 @@
         fieldDate.value = editData.date;
         fieldTitle.value = editData.title;
         fieldDesc.value = editData.description || '';
+        fieldLocation.value = editData.location || '';
         fieldUrl.value = editData.url || '';
         if (editData.thumbnail) {
           pendingImageData = editData.thumbnail;
@@ -1332,12 +1613,10 @@
         }
       } else {
         modalTitleText.textContent = 'New Memory';
-        // Default date to today
         fieldDate.value = new Date().toISOString().split('T')[0];
       }
 
       modalOverlay.classList.add('active');
-      // Focus first empty field after animation
       setTimeout(() => fieldTitle.focus(), 350);
     }
 
@@ -1373,6 +1652,7 @@
         date: fieldDate.value,
         title: fieldTitle.value.trim(),
         description: fieldDesc.value.trim(),
+        location: fieldLocation.value.trim(),
         url: fieldUrl.value.trim(),
         thumbnail: pendingImageData
       };
@@ -1448,7 +1728,6 @@
       reader.onload = (ev) => {
         try {
           const data = JSON.parse(ev.target.result);
-          // Basic validation
           if (!data.memories || !Array.isArray(data.memories)) {
             throw new Error('Invalid backup format: missing memories array.');
           }
@@ -1458,7 +1737,6 @@
               lsSet(LS_KEY_MEMORIES, data.memories);
               if (data.accent) lsSet(LS_KEY_ACCENT, data.accent);
               if (data.background) lsSet(LS_KEY_BG, data.background);
-              // Reload state
               loadMemories();
               applyAccent(lsGet(LS_KEY_ACCENT, '#00e5ff'));
               applyBackground(lsGet(LS_KEY_BG, null));
@@ -1494,7 +1772,6 @@
         `0 0 20px ${hex}, 0 0 60px ${hex}26`);
       accentPicker.value = hex;
       accentHex.textContent = hex;
-      // Highlight active swatch
       document.querySelectorAll('#accent-swatches .swatch').forEach(sw => {
         sw.classList.toggle('active', sw.dataset.color.toLowerCase() === hex.toLowerCase());
       });
@@ -1531,11 +1808,9 @@
         bgLayer.style.backgroundImage = 'none';
         bgLayer.style.backgroundColor = bgData;
       } else {
-        // Treat as data URL
         bgLayer.style.backgroundImage = `url(${bgData})`;
         bgLayer.style.backgroundColor = 'transparent';
       }
-      // Highlight active bg swatch
       document.querySelectorAll('#bg-swatches .swatch').forEach(sw => {
         sw.classList.toggle('active', sw.dataset.color === bgData);
       });
@@ -1581,8 +1856,6 @@
     if ('visualViewport' in window) {
       window.visualViewport.addEventListener('resize', () => {
         if (modalOverlay.classList.contains('active')) {
-          // When the virtual keyboard opens, the visual viewport shrinks.
-          // Scroll the focused element into view within the modal.
           const focused = document.activeElement;
           if (focused && memoryModal.contains(focused)) {
             setTimeout(() => focused.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
@@ -1592,7 +1865,7 @@
     }
 
     /* ================================================================
-       ESC KEY closes modals/panels
+       ESC KEY + ARROW KEYS
        ================================================================ */
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
@@ -1603,6 +1876,170 @@
         } else if (settingsPanel.classList.contains('open')) {
           closeSettings();
         }
+        return;
+      }
+
+      // Arrow key horizontal scroll (desktop only, when no modal/input is focused)
+      if (!isMobileView() && !modalOverlay.classList.contains('active')
+          && !settingsPanel.classList.contains('open')
+          && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+        const SCROLL_STEP = 320;
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          journeyScroll.scrollBy({ left: SCROLL_STEP, behavior: 'smooth' });
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          journeyScroll.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' });
+        }
+      }
+    });
+
+    /* ================================================================
+       MOUSE WHEEL → HORIZONTAL SCROLL (desktop only)
+       Intercepts vertical wheel events and maps them to scrollLeft.
+       ================================================================ */
+    journeyScroll.addEventListener('wheel', (e) => {
+      if (isMobileView()) return; // let mobile handle normally
+      // Only intercept vertical wheel (deltaY)
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        journeyScroll.scrollBy({
+          left: e.deltaY * 2.5, // multiply for faster panning
+          behavior: 'auto'      // instant for responsiveness
+        });
+      }
+    }, { passive: false });
+
+    /* ================================================================
+       CLICK-AND-DRAG PANNING (like Google Maps)
+       ================================================================ */
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragScrollLeft = 0;
+
+    journeyScroll.addEventListener('mousedown', (e) => {
+      if (isMobileView()) return;
+      // Don't start drag on buttons/links/cards
+      if (e.target.closest('.milestone-card, .btn, button, a, input')) return;
+      isDragging = true;
+      dragStartX = e.pageX;
+      dragScrollLeft = journeyScroll.scrollLeft;
+      journeyScroll.classList.add('grabbing');
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      const dx = e.pageX - dragStartX;
+      journeyScroll.scrollLeft = dragScrollLeft - dx;
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        journeyScroll.classList.remove('grabbing');
+      }
+    });
+
+    /* ================================================================
+       YEAR SCRUBBER — dynamic minimap navigation
+       Builds year buttons from existing milestones. Clicking a year
+       smooth-scrolls to the first milestone of that year.
+       ================================================================ */
+    const yearScrubber = $('#year-scrubber');
+
+    function buildYearScrubber() {
+      if (isMobileView() || memories.length === 0) {
+        yearScrubber.classList.add('hidden');
+        return;
+      }
+
+      // Extract unique years from sorted memories
+      const years = [...new Set(memories.map(m => {
+        try { return new Date(m.date + 'T00:00:00').getFullYear(); }
+        catch { return null; }
+      }).filter(Boolean))];
+
+      if (years.length === 0) {
+        yearScrubber.classList.add('hidden');
+        return;
+      }
+
+      let html = '';
+      years.forEach((yr, i) => {
+        if (i > 0) html += '<div class="scrubber-track"></div>';
+        html += `<button class="scrubber-btn" data-year="${yr}">${yr}</button>`;
+      });
+      yearScrubber.innerHTML = html;
+      yearScrubber.classList.remove('hidden');
+
+      // Attach click handlers
+      yearScrubber.querySelectorAll('.scrubber-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const year = parseInt(btn.dataset.year);
+          scrollToYear(year);
+          // Highlight active
+          yearScrubber.querySelectorAll('.scrubber-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+
+      // Update active year indicator on scroll
+      updateActiveScrubberYear();
+    }
+
+    function scrollToYear(year) {
+      // Find the first milestone element whose date matches the year
+      const idx = memories.findIndex(m => {
+        try { return new Date(m.date + 'T00:00:00').getFullYear() === year; }
+        catch { return false; }
+      });
+      if (idx === -1) return;
+
+      const milestone = timeline.querySelector(`.milestone[data-id="${memories[idx].id}"]`);
+      if (!milestone) return;
+
+      if (isMobileView()) {
+        milestone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        // Calculate horizontal scroll position to center the milestone
+        const cardLeft = milestone.offsetLeft;
+        const cardWidth = milestone.offsetWidth;
+        const viewWidth = journeyScroll.clientWidth;
+        const target = cardLeft - (viewWidth / 2) + (cardWidth / 2);
+        journeyScroll.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+      }
+    }
+
+    function updateActiveScrubberYear() {
+      if (isMobileView() || memories.length === 0) return;
+      const btns = yearScrubber.querySelectorAll('.scrubber-btn');
+      if (btns.length === 0) return;
+
+      // Find which milestone is closest to viewport center
+      const viewCenter = journeyScroll.scrollLeft + journeyScroll.clientWidth / 2;
+      let closestIdx = 0;
+      let closestDist = Infinity;
+
+      document.querySelectorAll('.milestone').forEach((el, i) => {
+        const elCenter = el.offsetLeft + el.offsetWidth / 2;
+        const dist = Math.abs(elCenter - viewCenter);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestIdx = i;
+        }
+      });
+
+      if (memories[closestIdx]) {
+        const yr = new Date(memories[closestIdx].date + 'T00:00:00').getFullYear();
+        btns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.year) === yr));
+      }
+    }
+
+    // Update scrubber highlight on scroll
+    journeyScroll.addEventListener('scroll', () => {
+      if (!isMobileView()) {
+        requestAnimationFrame(updateActiveScrubberYear);
       }
     });
 
@@ -1614,17 +2051,15 @@
       renderAccentSwatches();
       renderBgSwatches();
 
-      // Restore saved accent
       const savedAccent = lsGet(LS_KEY_ACCENT, null);
       if (savedAccent) applyAccent(savedAccent);
 
-      // Restore saved background
       const savedBg = lsGet(LS_KEY_BG, null);
       if (savedBg) applyBackground(savedBg);
 
-      // Load & render memories
       loadMemories();
       renderTimeline();
+      buildYearScrubber();
     }
 
     document.addEventListener('DOMContentLoaded', init);
