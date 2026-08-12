@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Memory Journey Vault — Futuristic Timeline</title>
+  <meta name="description" content="A futuristic, sci-fi memory timeline vault. Store, organize, and revisit your milestones in a glowing neon interface." />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ================================================================
+       CSS CUSTOM PROPERTIES — single source of truth for theming
+       ================================================================ */
+    :root {
+      --accent: #00e5ff;
+      --accent-dim: rgba(0, 229, 255, 0.25);
+      --accent-glow: 0 0 20px var(--accent), 0 0 60px rgba(0, 229, 255, 0.15);
+      --bg-primary: #05060f;
+      --bg-secondary: #0c0e1a;
+      --bg-card: rgba(12, 14, 30, 0.72);
+      --bg-glass: rgba(15, 18, 40, 0.55);
+      --border-glass: rgba(255, 255, 255, 0.08);
+      --text-primary: #e0e6f0;
+      --text-secondary: #8892a8;
+      --font-display: 'Orbitron', sans-serif;
+      --font-body: 'Rajdhani', sans-serif;
+      --radius: 16px;
+      --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ================================================================
+       RESET & BASE
+       ================================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+      position: relative;
+    }
+
+    /* Dynamic background image layer */
+    #bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: opacity 0.6s ease;
+    }
+    #bg-layer::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg,
+        rgba(5,6,15,0.92) 0%,
+        rgba(5,6,15,0.7) 40%,
+        rgba(5,6,15,0.85) 100%);
+    }
+
+    /* Animated starfield background */
+    .starfield {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .starfield .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle var(--dur) ease-in-out infinite alternate;
+      opacity: 0;
+    }
+    @keyframes twinkle {
+      0% { opacity: 0.1; transform: scale(0.8); }
+      100% { opacity: var(--max-o, 0.7); transform: scale(1.2); }
+    }
+
+    /* ================================================================
+       SCROLLBAR
+       ================================================================ */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent-dim);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ================================================================
+       HEADER
+       ================================================================ */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      background: rgba(5, 6, 15, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: clamp(0.85rem, 2.5vw, 1.25rem);
+      font-weight: 800;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--accent), #b388ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border-glass);
+      border-radius: 12px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--text-secondary);
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .icon-btn:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      box-shadow: var(--accent-glow);
+      transform: translateY(-2px);
+    }
+
+    /* ================================================================
+       EMPTY STATE
+       ================================================================ */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+      padding: 40px 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .empty-state .empty-icon {
+      font-size: 4rem;
+      color: var(--accent);
+      margin-bottom: 24px;
+      animation: float 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px var(--accent));
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+    .empty-state h2 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+    .empty-state p {
+      color: var(--text-secondary);
+      max-width: 380px;
+      font-size: 1.05rem;
+    }
+
+    /* ================================================================
+       TIMELINE
+       ================================================================ */
+    .timeline-container {
+      position: relative;
+      z-index: 1;
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 60px 20px 120px;
+    }
+
+    /* The glowing vertical spine */
+    .timeline-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px;
+      height: 100%;
+      background: linear-gradient(180deg,
+        transparent 0%,
+        var(--accent) 8%,
+        var(--accent) 92%,
+        transparent 100%);
+      box-shadow: 0 0 12px var(--accent), 0 0 30px rgba(0,229,255,0.15);
+      border-radius: 2px;
+    }
+
+    /* ================================================================
+       MILESTONE NODE
+       ================================================================ */
+    .milestone {
+      position: relative;
+      width: 45%;
+      padding: 0;
+      margin-bottom: 64px;
+      /* Scroll-reveal initial state */
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .milestone.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Alternate left/right */
+    .milestone:nth-child(odd) {
+      margin-left: 5%;
+    }
+    .milestone:nth-child(even) {
+      margin-left: 50%;
+    }
+
+    /* Dot on the spine */
+    .milestone::before {
+      content: '';
+      position: absolute;
+      top: 24px;
+      width: 16px;
+      height: 16px;
+      background: var(--accent);
+      border: 3px solid var(--bg-primary);
+      border-radius: 50%;
+      box-shadow: 0 0 14px var(--accent), 0 0 40px rgba(0,229,255,0.18);
+      z-index: 2;
+    }
+    .milestone:nth-child(odd)::before {
+      right: -33px;
+    }
+    .milestone:nth-child(even)::before {
+      left: -33px;
+    }
+
+    /* Connector line to dot */
+    .milestone::after {
+      content: '';
+      position: absolute;
+      top: 30px;
+      width: 24px;
+      height: 2px;
+      background: var(--accent-dim);
+    }
+    .milestone:nth-child(odd)::after {
+      right: -24px;
+    }
+    .milestone:nth-child(even)::after {
+      left: -24px;
+    }
+
+    /* Card */
+    .milestone-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: var(--transition);
+      position: relative;
+    }
+    .milestone-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 24px rgba(0,229,255,0.1), 0 8px 32px rgba(0,0,0,0.4);
+      transform: translateY(-4px);
+    }
+
+    .milestone-thumb {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .milestone-body {
+      padding: 20px;
+    }
+    .milestone-date {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .milestone-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    .milestone-desc {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      word-break: break-word;
+    }
+
+    .milestone-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding: 8px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border-glass);
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, var(--accent), #7c4dff);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 18px rgba(0,229,255,0.2);
+    }
+    .btn-accent:hover {
+      box-shadow: 0 6px 28px rgba(0,229,255,0.35);
+      transform: translateY(-2px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-ghost:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: #ff5252;
+      border: 1px solid rgba(255,82,82,0.2);
+    }
+    .btn-danger:hover {
+      background: rgba(255,82,82,0.1);
+      border-color: #ff5252;
+    }
+
+    /* ================================================================
+       FAB (Floating Action Button)
+       ================================================================ */
+    .fab {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      z-index: 90;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, var(--accent), #7c4dff);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 24px rgba(0,229,255,0.3), 0 0 40px rgba(0,229,255,0.12);
+      transition: var(--transition);
+      animation: fab-pulse 2.5s ease-in-out infinite;
+    }
+    .fab:hover {
+      transform: scale(1.1) rotate(90deg);
+      box-shadow: 0 6px 32px rgba(0,229,255,0.45);
+    }
+    @keyframes fab-pulse {
+      0%, 100% { box-shadow: 0 4px 24px rgba(0,229,255,0.3), 0 0 40px rgba(0,229,255,0.12); }
+      50% { box-shadow: 0 4px 32px rgba(0,229,255,0.5), 0 0 60px rgba(0,229,255,0.22); }
+    }
+
+    /* ================================================================
+       MODAL OVERLAY & PANEL (shared)
+       ================================================================ */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius);
+      width: 92%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 32px;
+      position: relative;
+      box-shadow: 0 0 40px rgba(0,229,255,0.08), 0 16px 48px rgba(0,0,0,0.5);
+      transform: translateY(24px) scale(0.97);
+      transition: transform 0.35s ease;
+    }
+    .overlay.active .modal {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border-glass);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .modal-close:hover { color: #ff5252; border-color: #ff5252; }
+
+    .modal h2 {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal h2 i { color: var(--accent); }
+
+    /* ================================================================
+       FORM ELEMENTS
+       ================================================================ */
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border-glass);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      transition: var(--transition);
+      outline: none;
+    }
+    .form-control:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .form-control::placeholder {
+      color: rgba(255,255,255,0.2);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* File input styled */
+    .file-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .file-input-wrap input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .file-input-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px dashed var(--border-glass);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .file-input-label:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .file-input-name {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    /* Image preview inside form */
+    .img-preview {
+      width: 100%;
+      max-height: 140px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-top: 10px;
+      border: 1px solid var(--border-glass);
+      display: none;
+    }
+    .img-preview.visible { display: block; }
+
+    /* Color picker row */
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .color-row input[type="color"] {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--border-glass);
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+      padding: 2px;
+    }
+    .color-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+    .color-row input[type="color"]::-webkit-color-swatch { border-radius: 6px; border: none; }
+
+    /* Preset color swatches */
+    .swatch-grid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .swatch:hover, .swatch.active {
+      border-color: #fff;
+      transform: scale(1.15);
+      box-shadow: 0 0 12px rgba(255,255,255,0.2);
+    }
+
+    /* ================================================================
+       SETTINGS SIDE-PANEL
+       ================================================================ */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 400px;
+      max-width: 94vw;
+      height: 100vh;
+      z-index: 250;
+      background: rgba(8, 10, 22, 0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-left: 1px solid var(--border-glass);
+      padding: 32px 24px;
+      overflow-y: auto;
+      transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .settings-panel.open {
+      right: 0;
+    }
+    .settings-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 240;
+      background: rgba(0,0,0,0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .settings-backdrop.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .settings-panel h2 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .settings-panel h2 i { color: var(--accent); }
+
+    .settings-section {
+      margin-bottom: 28px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-glass);
+    }
+    .settings-section:last-child { border-bottom: none; }
+
+    .settings-section h3 {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+    .settings-section p {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .settings-btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* ================================================================
+       CUSTOM ALERT / TOAST
+       ================================================================ */
+    .toast-container {
+      position: fixed;
+      top: 80px;
+      right: 24px;
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      padding: 14px 22px;
+      border-radius: 12px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      color: var(--text-primary);
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      animation: toast-in 0.4s ease forwards;
+      max-width: 380px;
+    }
+    .toast.toast-error { border-color: rgba(255,82,82,0.4); }
+    .toast.toast-error i { color: #ff5252; }
+    .toast.toast-success { border-color: rgba(0,229,255,0.3); }
+    .toast.toast-success i { color: var(--accent); }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(40px); }
+    }
+
+    /* ================================================================
+       CONFIRM DIALOG
+       ================================================================ */
+    .confirm-modal {
+      text-align: center;
+      max-width: 400px;
+    }
+    .confirm-modal p {
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .confirm-modal .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    /* ================================================================
+       RESPONSIVE — MOBILE
+       ================================================================ */
+    @media (max-width: 700px) {
+      .site-header { padding: 14px 16px; }
+
+      .timeline-container::before {
+        left: 20px;
+        transform: none;
+      }
+
+      .milestone,
+      .milestone:nth-child(odd),
+      .milestone:nth-child(even) {
+        width: calc(100% - 48px);
+        margin-left: 48px;
+      }
+
+      .milestone::before,
+      .milestone:nth-child(odd)::before,
+      .milestone:nth-child(even)::before {
+        left: -36px;
+        right: auto;
+      }
+
+      .milestone::after,
+      .milestone:nth-child(odd)::after,
+      .milestone:nth-child(even)::after {
+        left: -20px;
+        right: auto;
+        width: 16px;
+      }
+
+      .modal { padding: 24px 18px; max-height: 85vh; }
+      .fab { bottom: 20px; right: 20px; width: 54px; height: 54px; font-size: 1.3rem; }
+    }
+
+    /* Ensure modal inputs stay visible when virtual keyboard opens */
+    @media (max-height: 500px) {
+      .overlay { align-items: flex-start; padding-top: 10px; }
+      .modal { max-height: 95vh; }
+    }
+
+    /* ================================================================
+       UTILITY ANIMATIONS
+       ================================================================ */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .section-divider {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      border-radius: 2px;
+      margin-bottom: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       BACKGROUND LAYERS
+       ============================================================ -->
+  <div id="bg-layer"></div>
+  <div class="starfield" id="starfield"></div>
+
+  <!-- ============================================================
+       HEADER
+       ============================================================ -->
+  <header class="site-header">
+    <div class="logo">Memory Vault</div>
+    <div class="header-actions">
+      <button class="icon-btn" id="btn-settings" title="Settings &amp; Data Management">
+        <i class="fas fa-cog"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       TIMELINE
+       ============================================================ -->
+  <main>
+    <div class="timeline-container" id="timeline"></div>
+  </main>
+
+  <!-- ============================================================
+       FAB — Add New Memory
+       ============================================================ -->
+  <button class="fab" id="fab-add" title="Add New Memory">
+    <i class="fas fa-plus"></i>
+  </button>
+
+  <!-- ============================================================
+       MODAL — New / Edit Memory
+       ============================================================ -->
+  <div class="overlay" id="modal-overlay">
+    <div class="modal" id="memory-modal">
+      <button class="modal-close" id="modal-close"><i class="fas fa-xmark"></i></button>
+      <h2><i class="fas fa-meteor"></i> <span id="modal-title-text">New Memory</span></h2>
+
+      <form id="memory-form" autocomplete="off">
+        <!-- Hidden field for editing -->
+        <input type="hidden" id="edit-id" />
+
+        <div class="form-group">
+          <label for="mem-date">Date</label>
+          <input type="date" id="mem-date" class="form-control" required />
+        </div>
+
+        <div class="form-group">
+          <label for="mem-title">Title</label>
+          <input type="text" id="mem-title" class="form-control" placeholder="Give this memory a name..." required />
+        </div>
+
+        <div class="form-group">
+          <label for="mem-desc">Description</label>
+          <textarea id="mem-desc" class="form-control" placeholder="What happened? How did it feel?"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Thumbnail Image</label>
+          <div class="file-input-wrap">
+            <div class="file-input-label"><i class="fas fa-image"></i> Choose Image</div>
+            <input type="file" id="mem-image" accept="image/*" />
+            <span class="file-input-name" id="image-name">No file chosen</span>
+          </div>
+          <img class="img-preview" id="image-preview" alt="Preview" />
+        </div>
+
+        <div class="form-group">
+          <label for="mem-url">External Folder / URL</label>
+          <input type="url" id="mem-url" class="form-control" placeholder="https://drive.google.com/..." />
+        </div>
+
+        <button type="submit" class="btn btn-accent" style="width:100%;justify-content:center;margin-top:8px;">
+          <i class="fas fa-bolt"></i> Save Memory
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CONFIRM OVERLAY (delete / import)
+       ============================================================ -->
+  <div class="overlay" id="confirm-overlay">
+    <div class="modal confirm-modal">
+      <h2><i class="fas fa-triangle-exclamation"></i> Confirm</h2>
+      <p id="confirm-msg">Are you sure?</p>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="confirm-cancel">Cancel</button>
+        <button class="btn btn-danger" id="confirm-ok">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SETTINGS SIDE-PANEL
+       ============================================================ -->
+  <div class="settings-backdrop" id="settings-backdrop"></div>
+  <aside class="settings-panel" id="settings-panel">
+    <h2><i class="fas fa-sliders"></i> Control Panel</h2>
+    <div class="section-divider"></div>
+
+    <!-- Data Management -->
+    <div class="settings-section">
+      <h3><i class="fas fa-database"></i> Data Management</h3>
+      <p>Back up your memories as JSON or restore from a previous backup file.</p>
+      <div class="settings-btn-row">
+        <button class="btn btn-accent" id="btn-export"><i class="fas fa-download"></i> Export Backup</button>
+        <button class="btn btn-ghost" id="btn-import"><i class="fas fa-upload"></i> Import Backup</button>
+        <input type="file" id="import-file-input" accept=".json" style="display:none;" />
+      </div>
+    </div>
+
+    <!-- Accent Color -->
+    <div class="settings-section">
+      <h3><i class="fas fa-palette"></i> Timeline Accent Color</h3>
+      <div class="color-row">
+        <input type="color" id="accent-picker" value="#00e5ff" />
+        <span class="file-input-name" id="accent-hex">#00e5ff</span>
+      </div>
+      <div class="swatch-grid" id="accent-swatches"></div>
+    </div>
+
+    <!-- Background -->
+    <div class="settings-section">
+      <h3><i class="fas fa-panorama"></i> Background</h3>
+      <p>Upload a custom background or choose a preset color.</p>
+      <div class="file-input-wrap" style="margin-bottom:12px;">
+        <div class="file-input-label"><i class="fas fa-image"></i> Upload Image</div>
+        <input type="file" id="bg-image-input" accept="image/*" />
+        <span class="file-input-name" id="bg-image-name">No file chosen</span>
+      </div>
+      <button class="btn btn-ghost" id="btn-clear-bg" style="margin-bottom:14px;"><i class="fas fa-eraser"></i> Clear Background</button>
+      <div class="swatch-grid" id="bg-swatches"></div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="settings-section">
+      <h3 style="color:#ff5252;"><i class="fas fa-skull-crossbones"></i> Danger Zone</h3>
+      <button class="btn btn-danger" id="btn-clear-all"><i class="fas fa-trash-can"></i> Erase All Memories</button>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       TOAST CONTAINER
+       ============================================================ -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- ============================================================
+       JAVASCRIPT — APPLICATION LOGIC
+       ============================================================ -->
+  <script>
+    /* ================================================================
+       CONSTANTS & STATE
+       ================================================================ */
+    const LS_KEY_MEMORIES = 'mv_memories';
+    const LS_KEY_ACCENT   = 'mv_accent';
+    const LS_KEY_BG       = 'mv_bg';
+    const MAX_IMG_WIDTH   = 480;
+    const MAX_IMG_HEIGHT  = 360;
+    const IMG_QUALITY     = 0.55;
+
+    const PRESET_ACCENTS = [
+      '#00e5ff', '#7c4dff', '#ff4081', '#00e676',
+      '#ffab00', '#ff6e40', '#18ffff', '#ea80fc'
+    ];
+    const PRESET_BGS = [
+      '#05060f', '#0d1117', '#1a1a2e', '#16213e',
+      '#0f0e17', '#1b1b2f', '#2d132c', '#0a1628'
+    ];
+
+    let memories = [];        // Array of memory objects
+    let confirmCb = null;     // Callback for confirm dialog
+
+    /* ================================================================
+       DOM REFS
+       ================================================================ */
+    const $ = (sel) => document.querySelector(sel);
+    const timeline       = $('#timeline');
+    const fabAdd         = $('#fab-add');
+    const modalOverlay   = $('#modal-overlay');
+    const memoryModal    = $('#memory-modal');
+    const modalClose     = $('#modal-close');
+    const memoryForm     = $('#memory-form');
+    const editIdField    = $('#edit-id');
+    const modalTitleText = $('#modal-title-text');
+
+    const fieldDate      = $('#mem-date');
+    const fieldTitle     = $('#mem-title');
+    const fieldDesc      = $('#mem-desc');
+    const fieldImage     = $('#mem-image');
+    const fieldUrl       = $('#mem-url');
+    const imageName      = $('#image-name');
+    const imagePreview   = $('#image-preview');
+
+    const btnSettings    = $('#btn-settings');
+    const settingsPanel  = $('#settings-panel');
+    const settingsBack   = $('#settings-backdrop');
+
+    const btnExport      = $('#btn-export');
+    const btnImport      = $('#btn-import');
+    const importInput    = $('#import-file-input');
+    const accentPicker   = $('#accent-picker');
+    const accentHex      = $('#accent-hex');
+    const accentSwatches = $('#accent-swatches');
+    const bgSwatches     = $('#bg-swatches');
+    const bgImageInput   = $('#bg-image-input');
+    const bgImageName    = $('#bg-image-name');
+    const btnClearBg     = $('#btn-clear-bg');
+    const btnClearAll    = $('#btn-clear-all');
+
+    const confirmOverlay = $('#confirm-overlay');
+    const confirmMsg     = $('#confirm-msg');
+    const confirmCancel  = $('#confirm-cancel');
+    const confirmOk      = $('#confirm-ok');
+
+    const bgLayer        = $('#bg-layer');
+    const toastContainer = $('#toast-container');
+
+    /* ================================================================
+       STARFIELD GENERATION
+       ================================================================ */
+    function generateStars() {
+      const sf = $('#starfield');
+      const count = Math.min(120, Math.floor(window.innerWidth * window.innerHeight / 8000));
+      for (let i = 0; i < count; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        s.style.left = Math.random() * 100 + '%';
+        s.style.top = Math.random() * 100 + '%';
+        s.style.setProperty('--dur', (2 + Math.random() * 4).toFixed(1) + 's');
+        s.style.setProperty('--max-o', (0.3 + Math.random() * 0.5).toFixed(2));
+        s.style.animationDelay = (Math.random() * 5).toFixed(1) + 's';
+        sf.appendChild(s);
+      }
+    }
+
+    /* ================================================================
+       TOAST NOTIFICATIONS
+       ================================================================ */
+    function showToast(msg, type = 'success') {
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      const icon = type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check';
+      t.innerHTML = `<i class="fas ${icon}"></i> <span>${msg}</span>`;
+      toastContainer.appendChild(t);
+      setTimeout(() => {
+        t.style.animation = 'toast-out 0.35s ease forwards';
+        t.addEventListener('animationend', () => t.remove());
+      }, 3500);
+    }
+
+    /* ================================================================
+       CONFIRM DIALOG
+       ================================================================ */
+    function showConfirm(msg, cb) {
+      confirmMsg.textContent = msg;
+      confirmCb = cb;
+      confirmOverlay.classList.add('active');
+    }
+    confirmCancel.addEventListener('click', () => confirmOverlay.classList.remove('active'));
+    confirmOk.addEventListener('click', () => {
+      confirmOverlay.classList.remove('active');
+      if (confirmCb) confirmCb();
+      confirmCb = null;
+    });
+
+    /* ================================================================
+       LOCAL-STORAGE HELPERS (with quota error handling)
+       ================================================================ */
+    function lsSet(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
+          showToast('Storage limit reached. Please export a backup and remove old memories, or use smaller images.', 'error');
+        } else {
+          showToast('Failed to save data: ' + e.message, 'error');
+        }
+      }
+    }
+
+    function lsGet(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    /* ================================================================
+       IMAGE COMPRESSION via Canvas
+       Resizes + re-encodes to JPEG at reduced quality to stay within
+       localStorage budget.
+       ================================================================ */
+    function compressImage(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('File read failed'));
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onerror = () => reject(new Error('Image decode failed'));
+          img.onload = () => {
+            let { width, height } = img;
+
+            // Scale down proportionally
+            if (width > MAX_IMG_WIDTH) {
+              height = Math.round(height * (MAX_IMG_WIDTH / width));
+              width = MAX_IMG_WIDTH;
+            }
+            if (height > MAX_IMG_HEIGHT) {
+              width = Math.round(width * (MAX_IMG_HEIGHT / height));
+              height = MAX_IMG_HEIGHT;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Encode as JPEG
+            const dataUrl = canvas.toDataURL('image/jpeg', IMG_QUALITY);
+            resolve(dataUrl);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /* Compress background images more aggressively */
+    function compressBgImage(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('File read failed'));
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onerror = () => reject(new Error('Image decode failed'));
+          img.onload = () => {
+            let { width, height } = img;
+            const MAX_W = 1200, MAX_H = 800;
+            if (width > MAX_W) {
+              height = Math.round(height * (MAX_W / width));
+              width = MAX_W;
+            }
+            if (height > MAX_H) {
+              width = Math.round(width * (MAX_H / height));
+              height = MAX_H;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.5));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /* ================================================================
+       MEMORIES CRUD
+       ================================================================ */
+    function loadMemories() {
+      memories = lsGet(LS_KEY_MEMORIES, []);
+    }
+
+    function saveMemories() {
+      lsSet(LS_KEY_MEMORIES, memories);
+    }
+
+    function addMemory(mem) {
+      memories.push(mem);
+      // Sort by date descending (newest first)
+      memories.sort((a, b) => new Date(b.date) - new Date(a.date));
+      saveMemories();
+    }
+
+    function updateMemory(id, data) {
+      const idx = memories.findIndex(m => m.id === id);
+      if (idx !== -1) {
+        memories[idx] = { ...memories[idx], ...data };
+        memories.sort((a, b) => new Date(b.date) - new Date(a.date));
+        saveMemories();
+      }
+    }
+
+    function deleteMemory(id) {
+      memories = memories.filter(m => m.id !== id);
+      saveMemories();
+    }
+
+    function genId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+
+    /* ================================================================
+       RENDER TIMELINE
+       ================================================================ */
+    function renderTimeline() {
+      if (memories.length === 0) {
+        timeline.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fas fa-rocket"></i></div>
+            <h2>No Memories Yet</h2>
+            <p>Start your journey by tapping the <strong>+</strong> button to add your first memory node.</p>
+          </div>`;
+        return;
+      }
+
+      timeline.innerHTML = memories.map(m => {
+        const thumbHTML = m.thumbnail
+          ? `<img class="milestone-thumb" src="${m.thumbnail}" alt="${escHtml(m.title)}" loading="lazy" />`
+          : '';
+        const vaultBtn = m.url
+          ? `<a href="${escHtml(m.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-accent"><i class="fas fa-vault"></i> Open Vault</a>`
+          : '';
+        const dateStr = formatDate(m.date);
+
+        return `
+          <div class="milestone" data-id="${m.id}">
+            <div class="milestone-card">
+              ${thumbHTML}
+              <div class="milestone-body">
+                <div class="milestone-date"><i class="fas fa-clock"></i> ${dateStr}</div>
+                <div class="milestone-title">${escHtml(m.title)}</div>
+                <div class="milestone-desc">${escHtml(m.description || '')}</div>
+                <div class="milestone-actions">
+                  ${vaultBtn}
+                  <button class="btn btn-ghost" onclick="editMemory('${m.id}')"><i class="fas fa-pen"></i> Edit</button>
+                  <button class="btn btn-danger" onclick="confirmDelete('${m.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+
+      // Re-observe for scroll-reveal
+      observeNodes();
+    }
+
+    function escHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+      try {
+        const d = new Date(dateStr + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      } catch {
+        return dateStr;
+      }
+    }
+
+    /* ================================================================
+       INTERSECTION OBSERVER — scroll-reveal for milestones
+       ================================================================ */
+    let observer;
+    function observeNodes() {
+      if (observer) observer.disconnect();
+      observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.milestone').forEach(el => observer.observe(el));
+    }
+
+    /* ================================================================
+       MODAL — Open / Close / Submit
+       ================================================================ */
+    let pendingImageData = null;
+
+    function openModal(editData = null) {
+      memoryForm.reset();
+      imagePreview.classList.remove('visible');
+      imageName.textContent = 'No file chosen';
+      pendingImageData = null;
+      editIdField.value = '';
+
+      if (editData) {
+        modalTitleText.textContent = 'Edit Memory';
+        editIdField.value = editData.id;
+        fieldDate.value = editData.date;
+        fieldTitle.value = editData.title;
+        fieldDesc.value = editData.description || '';
+        fieldUrl.value = editData.url || '';
+        if (editData.thumbnail) {
+          pendingImageData = editData.thumbnail;
+          imagePreview.src = editData.thumbnail;
+          imagePreview.classList.add('visible');
+          imageName.textContent = 'Current image';
+        }
+      } else {
+        modalTitleText.textContent = 'New Memory';
+        // Default date to today
+        fieldDate.value = new Date().toISOString().split('T')[0];
+      }
+
+      modalOverlay.classList.add('active');
+      // Focus first empty field after animation
+      setTimeout(() => fieldTitle.focus(), 350);
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    fabAdd.addEventListener('click', () => openModal());
+    modalClose.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    // Image file change handler
+    fieldImage.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      imageName.textContent = file.name;
+      try {
+        pendingImageData = await compressImage(file);
+        imagePreview.src = pendingImageData;
+        imagePreview.classList.add('visible');
+      } catch (err) {
+        showToast('Failed to process image: ' + err.message, 'error');
+      }
+    });
+
+    // Form submission
+    memoryForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = editIdField.value;
+      const data = {
+        date: fieldDate.value,
+        title: fieldTitle.value.trim(),
+        description: fieldDesc.value.trim(),
+        url: fieldUrl.value.trim(),
+        thumbnail: pendingImageData
+      };
+
+      if (!data.title) {
+        showToast('Title is required.', 'error');
+        return;
+      }
+
+      if (id) {
+        updateMemory(id, data);
+        showToast('Memory updated successfully!');
+      } else {
+        data.id = genId();
+        data.createdAt = Date.now();
+        addMemory(data);
+        showToast('Memory saved to the vault!');
+      }
+
+      closeModal();
+      renderTimeline();
+    });
+
+    /* Global functions for inline onclick handlers */
+    window.editMemory = function(id) {
+      const mem = memories.find(m => m.id === id);
+      if (mem) openModal(mem);
+    };
+
+    window.confirmDelete = function(id) {
+      showConfirm('Delete this memory permanently? This cannot be undone.', () => {
+        deleteMemory(id);
+        renderTimeline();
+        showToast('Memory deleted.');
+      });
+    };
+
+    /* ================================================================
+       SETTINGS PANEL
+       ================================================================ */
+    function openSettings() { settingsPanel.classList.add('open'); settingsBack.classList.add('open'); }
+    function closeSettings() { settingsPanel.classList.remove('open'); settingsBack.classList.remove('open'); }
+
+    btnSettings.addEventListener('click', openSettings);
+    settingsBack.addEventListener('click', closeSettings);
+
+    /* ---- Export ---- */
+    btnExport.addEventListener('click', () => {
+      const payload = {
+        _meta: { app: 'MemoryJourneyVault', exportedAt: new Date().toISOString() },
+        memories: lsGet(LS_KEY_MEMORIES, []),
+        accent: lsGet(LS_KEY_ACCENT, null),
+        background: lsGet(LS_KEY_BG, null)
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'memory_vault_backup.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('Backup exported!');
+    });
+
+    /* ---- Import ---- */
+    btnImport.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          // Basic validation
+          if (!data.memories || !Array.isArray(data.memories)) {
+            throw new Error('Invalid backup format: missing memories array.');
+          }
+          showConfirm(
+            `Import ${data.memories.length} memories? This will REPLACE all current data.`,
+            () => {
+              lsSet(LS_KEY_MEMORIES, data.memories);
+              if (data.accent) lsSet(LS_KEY_ACCENT, data.accent);
+              if (data.background) lsSet(LS_KEY_BG, data.background);
+              // Reload state
+              loadMemories();
+              applyAccent(lsGet(LS_KEY_ACCENT, '#00e5ff'));
+              applyBackground(lsGet(LS_KEY_BG, null));
+              renderTimeline();
+              showToast(`Imported ${data.memories.length} memories successfully!`);
+            }
+          );
+        } catch (err) {
+          showToast('Import failed: ' + err.message, 'error');
+        }
+      };
+      reader.readAsText(file);
+      importInput.value = '';
+    });
+
+    /* ---- Clear All ---- */
+    btnClearAll.addEventListener('click', () => {
+      showConfirm('Erase ALL memories and settings? This is permanent!', () => {
+        localStorage.removeItem(LS_KEY_MEMORIES);
+        memories = [];
+        renderTimeline();
+        showToast('All memories erased.');
+      });
+    });
+
+    /* ================================================================
+       ACCENT COLOR
+       ================================================================ */
+    function applyAccent(hex) {
+      document.documentElement.style.setProperty('--accent', hex);
+      document.documentElement.style.setProperty('--accent-dim', hex + '40');
+      document.documentElement.style.setProperty('--accent-glow',
+        `0 0 20px ${hex}, 0 0 60px ${hex}26`);
+      accentPicker.value = hex;
+      accentHex.textContent = hex;
+      // Highlight active swatch
+      document.querySelectorAll('#accent-swatches .swatch').forEach(sw => {
+        sw.classList.toggle('active', sw.dataset.color.toLowerCase() === hex.toLowerCase());
+      });
+    }
+
+    function renderAccentSwatches() {
+      accentSwatches.innerHTML = PRESET_ACCENTS.map(c =>
+        `<div class="swatch" data-color="${c}" style="background:${c};" title="${c}"></div>`
+      ).join('');
+      accentSwatches.querySelectorAll('.swatch').forEach(sw => {
+        sw.addEventListener('click', () => {
+          const c = sw.dataset.color;
+          applyAccent(c);
+          lsSet(LS_KEY_ACCENT, c);
+        });
+      });
+    }
+
+    accentPicker.addEventListener('input', (e) => {
+      applyAccent(e.target.value);
+      lsSet(LS_KEY_ACCENT, e.target.value);
+    });
+
+    /* ================================================================
+       BACKGROUND CUSTOMIZATION
+       ================================================================ */
+    function applyBackground(bgData) {
+      if (!bgData) {
+        bgLayer.style.backgroundImage = 'none';
+        bgLayer.style.backgroundColor = 'transparent';
+        return;
+      }
+      if (bgData.startsWith('#')) {
+        bgLayer.style.backgroundImage = 'none';
+        bgLayer.style.backgroundColor = bgData;
+      } else {
+        // Treat as data URL
+        bgLayer.style.backgroundImage = `url(${bgData})`;
+        bgLayer.style.backgroundColor = 'transparent';
+      }
+      // Highlight active bg swatch
+      document.querySelectorAll('#bg-swatches .swatch').forEach(sw => {
+        sw.classList.toggle('active', sw.dataset.color === bgData);
+      });
+    }
+
+    function renderBgSwatches() {
+      bgSwatches.innerHTML = PRESET_BGS.map(c =>
+        `<div class="swatch" data-color="${c}" style="background:${c};" title="${c}"></div>`
+      ).join('');
+      bgSwatches.querySelectorAll('.swatch').forEach(sw => {
+        sw.addEventListener('click', () => {
+          const c = sw.dataset.color;
+          applyBackground(c);
+          lsSet(LS_KEY_BG, c);
+          bgImageName.textContent = 'No file chosen';
+        });
+      });
+    }
+
+    bgImageInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      bgImageName.textContent = file.name;
+      try {
+        const dataUrl = await compressBgImage(file);
+        applyBackground(dataUrl);
+        lsSet(LS_KEY_BG, dataUrl);
+      } catch (err) {
+        showToast('Background image failed: ' + err.message, 'error');
+      }
+    });
+
+    btnClearBg.addEventListener('click', () => {
+      applyBackground(null);
+      localStorage.removeItem(LS_KEY_BG);
+      bgImageName.textContent = 'No file chosen';
+      showToast('Background cleared.');
+    });
+
+    /* ================================================================
+       KEYBOARD HANDLING — keep modal inputs visible on mobile
+       ================================================================ */
+    if ('visualViewport' in window) {
+      window.visualViewport.addEventListener('resize', () => {
+        if (modalOverlay.classList.contains('active')) {
+          // When the virtual keyboard opens, the visual viewport shrinks.
+          // Scroll the focused element into view within the modal.
+          const focused = document.activeElement;
+          if (focused && memoryModal.contains(focused)) {
+            setTimeout(() => focused.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+          }
+        }
+      });
+    }
+
+    /* ================================================================
+       ESC KEY closes modals/panels
+       ================================================================ */
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (confirmOverlay.classList.contains('active')) {
+          confirmOverlay.classList.remove('active');
+        } else if (modalOverlay.classList.contains('active')) {
+          closeModal();
+        } else if (settingsPanel.classList.contains('open')) {
+          closeSettings();
+        }
+      }
+    });
+
+    /* ================================================================
+       INIT — Bootstrap application
+       ================================================================ */
+    function init() {
+      generateStars();
+      renderAccentSwatches();
+      renderBgSwatches();
+
+      // Restore saved accent
+      const savedAccent = lsGet(LS_KEY_ACCENT, null);
+      if (savedAccent) applyAccent(savedAccent);
+
+      // Restore saved background
+      const savedBg = lsGet(LS_KEY_BG, null);
+      if (savedBg) applyBackground(savedBg);
+
+      // Load & render memories
+      loadMemories();
+      renderTimeline();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
