@@ -1,0 +1,170 @@
+<UserControl x:Class="MemoryTimeline.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource BackgroundBrush}"
+             FontFamily="Segoe UI">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,28">
+
+            <TextBlock Text="Settings ⚙️" Style="{DynamicResource HeadingStyle}" FontSize="22" Margin="0,0,0,28"/>
+
+            <!-- Appearance -->
+            <Border Style="{DynamicResource CardStyle}" Padding="24" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Appearance" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Dark Mode" Style="{DynamicResource SubHeadingStyle}"
+                                   VerticalAlignment="Center" Margin="0,0,16,0" FontSize="14"/>
+                        <CheckBox IsChecked="{Binding IsDarkTheme}"
+                                  Command="{Binding ToggleThemeCommand}"
+                                  VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Export Memory Information -->
+            <Border Style="{DynamicResource CardStyle}" Padding="24" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Export Memories" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                    <TextBlock Text="Export all memory records, tags, locations, and media references to a structured JSON file."
+                               Style="{DynamicResource SubHeadingStyle}" FontSize="13" Margin="0,0,0,16"/>
+                    <Button Content="📥 Export Memory Information (JSON)"
+                            Command="{Binding ExportMemoriesCommand}"
+                            Style="{DynamicResource AccentButtonStyle}"
+                            HorizontalAlignment="Left"
+                            Padding="18,10" FontSize="13" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Media Storage -->
+            <Border Style="{DynamicResource CardStyle}" Padding="24" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Media Storage" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
+                    <TextBlock Text="Application Media Folder Location" Style="{DynamicResource SubHeadingStyle}"
+                               Margin="0,0,0,6"/>
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Text="{Binding MediaFolder}"
+                                 Padding="10,8" FontSize="13" IsReadOnly="True"
+                                 Background="{DynamicResource SurfaceBrush}"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"
+                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                 Margin="0,0,8,0"/>
+                        <Button Grid.Column="1" Content="Open Folder"
+                                Command="{Binding OpenMediaFolderCommand}"
+                                Style="{DynamicResource AccentButtonStyle}"
+                                Padding="14,8"/>
+                    </Grid>
+
+                    <!-- Cache Management -->
+                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,8,0,16"/>
+                    <TextBlock Text="Media Cache Management" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <TextBlock Text="Current Thumbnail Cache Size: " Style="{DynamicResource SubHeadingStyle}"/>
+                        <TextBlock Text="{Binding CacheSizeDisplay}" FontWeight="Bold"
+                                   Foreground="{DynamicResource AccentBrush}"/>
+                    </StackPanel>
+                    <Button Content="🧹 Clear Thumbnail Cache"
+                            Command="{Binding ClearCacheCommand}"
+                            Padding="16,8" FontSize="13"
+                            HorizontalAlignment="Left"
+                            Background="{DynamicResource SurfaceBrush}"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="6"
+                                        Padding="{TemplateBinding Padding}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- Database & Backup -->
+            <Border Style="{DynamicResource CardStyle}" Padding="24" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Database &amp; Backup" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
+                    <TextBlock Text="Database Location" Style="{DynamicResource SubHeadingStyle}"
+                               Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding DatabasePath}" IsReadOnly="True"
+                             Padding="10,8" FontSize="13"
+                             Background="{DynamicResource SurfaceBrush}"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
+                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                             Margin="0,0,0,16"/>
+
+                    <TextBlock Text="Full backup creates a ZIP containing the SQLite database and all copied media files. Note: media stored via 'Original File Location' is linked, not bundled."
+                               Style="{DynamicResource SubHeadingStyle}" FontSize="12" Margin="0,0,0,14" TextWrapping="Wrap"/>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="💾 Full Backup Archive (.zip)"
+                                Command="{Binding BackupDatabaseCommand}"
+                                Style="{DynamicResource AccentButtonStyle}"
+                                Padding="16,10" FontSize="13" Margin="0,0,12,0"/>
+                        <Button Content="📂 Restore Backup (.zip / .db)"
+                                Command="{Binding RestoreDatabaseCommand}"
+                                Padding="16,10" FontSize="13"
+                                Background="{DynamicResource SurfaceBrush}"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="6"
+                                            Padding="{TemplateBinding Padding}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Status message -->
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Foreground="#50C878" FontSize="13" Margin="0,14,0,0"
+                               Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibility}}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- About -->
+            <Border Style="{DynamicResource CardStyle}" Padding="24" Margin="0,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="About" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="📸" FontSize="32" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Memory Timeline" FontSize="18" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding AppVersion, StringFormat='Version {0}'}"
+                                       Style="{DynamicResource SubHeadingStyle}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock Text="A personal digital memory archive. Store your life's moments, milestones, photos, and videos in one beautiful offline-first place."
+                               Style="{DynamicResource SubHeadingStyle}" TextWrapping="Wrap"
+                               FontSize="13" Margin="0,8,0,0"/>
+                    <TextBlock Text="Built with C# · .NET 10 LTS · WPF · SQLite · CommunityToolkit.Mvvm · Leaflet &amp; OpenStreetMap · WebView2"
+                               Style="{DynamicResource SubHeadingStyle}" FontSize="11"
+                               Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

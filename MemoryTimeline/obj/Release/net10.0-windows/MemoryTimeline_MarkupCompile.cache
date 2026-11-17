@@ -1,0 +1,20 @@
+﻿MemoryTimeline
+
+
+winexe
+C#
+.cs
+C:\Users\rashm\Desktop\photo app\MemoryTimeline\obj\Release\net10.0-windows\
+MemoryTimeline
+none
+false
+TRACE;RELEASE;NET;NET10_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NET10_0_OR_GREATER;NETCOREAPP1_0_OR_GREATER;NETCOREAPP1_1_OR_GREATER;NETCOREAPP2_0_OR_GREATER;NETCOREAPP2_1_OR_GREATER;NETCOREAPP2_2_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
+C:\Users\rashm\Desktop\photo app\MemoryTimeline\App.xaml
+141060930439
+3-1843917922
+49153972323
+248-924920728
+MainWindow.xaml;Themes\Dark.xaml;Themes\Light.xaml;Views\AddEditMemoryWindow.xaml;Views\CalendarView.xaml;Views\DashboardView.xaml;Views\FavoritesView.xaml;Views\GalleryView.xaml;Views\LocationPickerWindow.xaml;Views\MediaPreviewWindow.xaml;Views\MemoryDetailWindow.xaml;Views\MilestonesView.xaml;Views\SettingsView.xaml;Views\TimelineView.xaml;
+
+False
+

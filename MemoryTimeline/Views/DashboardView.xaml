@@ -1,0 +1,218 @@
+<UserControl x:Class="MemoryTimeline.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:MemoryTimeline.ViewModels"
+             Background="{DynamicResource BackgroundBrush}"
+             FontFamily="Segoe UI">
+
+    <Grid>
+        <!-- Loading Overlay -->
+        <Grid Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}"
+              Panel.ZIndex="10" Background="#80000000">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="Loading..." Foreground="White" FontSize="18"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="32,32,32,24">
+
+                <!-- Header -->
+                <Grid Margin="0,0,0,28">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="{Binding Greeting, StringFormat='{}{0} 👋'}"
+                                   Style="{DynamicResource HeadingStyle}"
+                                   FontSize="28"/>
+                        <TextBlock Text="Your personal memory archive"
+                                   Style="{DynamicResource SubHeadingStyle}"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="+ New Memory"
+                            Style="{DynamicResource AccentButtonStyle}"
+                            Padding="20,12"
+                            FontSize="14" FontWeight="SemiBold"
+                            x:Name="NewMemoryBtn"
+                            VerticalAlignment="Center"/>
+                </Grid>
+
+                <!-- Stats Cards -->
+                <UniformGrid Columns="4" Margin="0,0,0,28">
+                    <!-- Total Memories -->
+                    <Border Style="{DynamicResource CardStyle}" Margin="0,0,8,0">
+                        <StackPanel>
+                            <TextBlock Text="📝" FontSize="28" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding TotalMemories}"
+                                       FontSize="36" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentBrush}"/>
+                            <TextBlock Text="Total Memories"
+                                       Style="{DynamicResource SubHeadingStyle}"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <!-- Milestones -->
+                    <Border Style="{DynamicResource CardStyle}" Margin="4,0,4,0">
+                        <StackPanel>
+                            <TextBlock Text="⭐" FontSize="28" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding TotalMilestones}"
+                                       FontSize="36" FontWeight="Bold"
+                                       Foreground="#F5A623"/>
+                            <TextBlock Text="Milestones"
+                                       Style="{DynamicResource SubHeadingStyle}"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <!-- Photos -->
+                    <Border Style="{DynamicResource CardStyle}" Margin="4,0,4,0">
+                        <StackPanel>
+                            <TextBlock Text="🖼️" FontSize="28" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding TotalPhotos}"
+                                       FontSize="36" FontWeight="Bold"
+                                       Foreground="#50C878"/>
+                            <TextBlock Text="Photos"
+                                       Style="{DynamicResource SubHeadingStyle}"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <!-- Videos -->
+                    <Border Style="{DynamicResource CardStyle}" Margin="8,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="🎬" FontSize="28" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding TotalVideos}"
+                                       FontSize="36" FontWeight="Bold"
+                                       Foreground="#6C9EFF"/>
+                            <TextBlock Text="Videos"
+                                       Style="{DynamicResource SubHeadingStyle}"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <!-- Memories by Year Section -->
+                <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,24" Padding="18"
+                        Visibility="{Binding MemoriesByYear.Count, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="Memories by Year" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12"/>
+                        <ItemsControl ItemsSource="{Binding MemoriesByYear}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="14,10" Margin="0,0,10,6" CornerRadius="8"
+                                            Background="{DynamicResource SurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Year}" FontWeight="Bold" FontSize="14"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,8,0"/>
+                                            <Border Background="{DynamicResource AccentBrush}" CornerRadius="10" Padding="8,2">
+                                                <TextBlock Text="{Binding Count, StringFormat='{}{0} memories'}"
+                                                           Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Recent Memories + Recent Photos Row -->
+                <Grid Margin="0,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="320"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Recent Memories -->
+                    <Border Style="{DynamicResource CardStyle}" Grid.Column="0" Margin="0,0,8,0" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="Recent Memories" FontSize="16" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
+
+                            <!-- Empty state -->
+                            <TextBlock Text="No memories yet. Create your first memory!"
+                                       Style="{DynamicResource SubHeadingStyle}"
+                                       Visibility="{Binding RecentMemories.Count, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"
+                                       TextWrapping="Wrap"/>
+
+                            <ItemsControl ItemsSource="{Binding RecentMemories}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,0,10" Padding="12"
+                                                CornerRadius="8"
+                                                Background="{DynamicResource SurfaceBrush}"
+                                                Cursor="Hand"
+                                                MouseLeftButtonUp="OnRecentMemoryClick">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding IsMilestone, Converter={StaticResource MilestoneToIcon}}"
+                                                                   FontSize="13" Margin="0,0,4,0"
+                                                                   Visibility="{Binding IsMilestone, Converter={StaticResource BoolToVisibility}}"/>
+                                                        <TextBlock Text="{Binding Title}"
+                                                                   FontWeight="SemiBold" FontSize="14"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding LocationName}"
+                                                               Style="{DynamicResource SubHeadingStyle}"
+                                                               FontSize="12" Margin="0,2,0,0"
+                                                               Visibility="{Binding LocationName, Converter={StaticResource StringToVisibility}}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding MemoryDate, Converter={StaticResource DateFormat}, ConverterParameter='MMM d, yyyy'}"
+                                                           Style="{DynamicResource SubHeadingStyle}"
+                                                           FontSize="12" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Recent Photos -->
+                    <Border Style="{DynamicResource CardStyle}" Grid.Column="1" Margin="8,0,0,0" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="Recent Photos" FontSize="16" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
+                            <TextBlock Text="No photos yet."
+                                       Style="{DynamicResource SubHeadingStyle}"
+                                       Visibility="{Binding RecentPhotos.Count, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                            <ItemsControl ItemsSource="{Binding RecentPhotos}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="60" Height="60" Margin="3" CornerRadius="6"
+                                                Background="{DynamicResource SurfaceBrush}"
+                                                Cursor="Hand" MouseLeftButtonUp="OnRecentPhotoClick">
+                                            <Image Source="{Binding Converter={StaticResource PathToImage}}"
+                                                   Stretch="UniformToFill"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

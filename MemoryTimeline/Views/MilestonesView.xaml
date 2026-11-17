@@ -1,0 +1,116 @@
+<UserControl x:Class="MemoryTimeline.Views.MilestonesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource BackgroundBrush}"
+             FontFamily="Segoe UI">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Padding="24,16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+            <TextBlock Text="Milestones ⭐" Style="{DynamicResource HeadingStyle}" FontSize="22"/>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="24,20">
+
+                <TextBlock Text="Loading..." Style="{DynamicResource SubHeadingStyle}"
+                           Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}"
+                           HorizontalAlignment="Center"/>
+
+                <TextBlock Text="No milestones yet. Mark a memory as a milestone to see it here!"
+                           Style="{DynamicResource SubHeadingStyle}"
+                           TextWrapping="Wrap" HorizontalAlignment="Center"
+                           Margin="0,40,0,0"
+                           Visibility="{Binding Milestones.Count, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+
+                <ItemsControl ItemsSource="{Binding Milestones}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,0,0,16" Padding="20" CornerRadius="14"
+                                    Background="{DynamicResource CardBrush}"
+                                    BorderBrush="#F5A623" BorderThickness="2"
+                                    Cursor="Hand" MouseLeftButtonUp="OnMilestoneCardClick">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Thumbnail -->
+                                    <Border Grid.Column="0" Width="90" Height="90" CornerRadius="10"
+                                            Background="{DynamicResource SurfaceBrush}" Margin="0,0,16,0">
+                                        <Grid>
+                                            <Image Stretch="UniformToFill">
+                                                <Image.Style>
+                                                    <Style TargetType="Image">
+                                                        <Setter Property="Source" Value="{Binding MediaItems[0], Converter={StaticResource PathToImage}}"/>
+                                                    </Style>
+                                                </Image.Style>
+                                            </Image>
+                                            <TextBlock Text="⭐" FontSize="40"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       Visibility="{Binding MediaItems.Count, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Info -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontSize="18" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding MemoryDate, Converter={StaticResource DateFormat}, ConverterParameter='MMMM d, yyyy'}"
+                                                   Foreground="#F5A623" FontSize="13"
+                                                   FontWeight="SemiBold" Margin="0,4,0,0"/>
+                                        <TextBlock Text="{Binding LocationName}"
+                                                   Style="{DynamicResource SubHeadingStyle}"
+                                                   FontSize="12" Margin="0,3,0,0"
+                                                   Visibility="{Binding LocationName, Converter={StaticResource StringToVisibility}}"/>
+                                        <TextBlock Text="{Binding Description, Converter={StaticResource Truncate}, ConverterParameter=120}"
+                                                   Style="{DynamicResource SubHeadingStyle}"
+                                                   TextWrapping="Wrap" FontSize="12" Margin="0,6,0,0"
+                                                   Visibility="{Binding Description, Converter={StaticResource StringToVisibility}}"/>
+                                    </StackPanel>
+
+                                    <!-- Actions -->
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="12,0,0,0">
+                                        <Button Content="🔗 Open Drive"
+                                                Command="{Binding DataContext.OpenGoogleDriveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{DynamicResource AccentButtonStyle}"
+                                                Padding="12,8" FontSize="12" Margin="0,0,0,8"
+                                                Visibility="{Binding GoogleDriveUrl, Converter={StaticResource StringToVisibility}}"/>
+                                        <Button Content="✏️ Edit"
+                                                Command="{Binding DataContext.EditMilestoneCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Padding="12,8" FontSize="12"
+                                                Background="{DynamicResource SurfaceBrush}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                                Cursor="Hand">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="6"
+                                                            Padding="{TemplateBinding Padding}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

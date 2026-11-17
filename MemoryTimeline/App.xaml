@@ -1,0 +1,30 @@
+<Application x:Class="MemoryTimeline.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:MemoryTimeline.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Dark.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Global Converters -->
+            <conv:StringToVisibilityConverter x:Key="StringToVisibility"/>
+            <conv:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+            <conv:NullToVisibilityConverter x:Key="NullToVisibility"/>
+            <conv:PathToImageConverter x:Key="PathToImage"/>
+            <conv:DateFormatConverter x:Key="DateFormat"/>
+            <conv:MediaTypeToIconConverter x:Key="MediaTypeToIcon"/>
+            <conv:EqualsToBoolConverter x:Key="EqualsTo"/>
+            <conv:EqualsToVisibilityConverter x:Key="EqualsToVisibility"/>
+            <conv:MilestoneToIconConverter x:Key="MilestoneToIcon"/>
+            <conv:CountToStringConverter x:Key="CountToString"/>
+            <conv:FavoriteToColorConverter x:Key="FavoriteToColor"/>
+            <conv:TruncateConverter x:Key="Truncate"/>
+            <conv:StorageModeToBadgeConverter x:Key="StorageModeToBadge"/>
+
+            <!-- Global font -->
+            <FontFamily x:Key="AppFont">Segoe UI</FontFamily>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

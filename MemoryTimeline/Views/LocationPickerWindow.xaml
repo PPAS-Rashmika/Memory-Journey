@@ -1,0 +1,116 @@
+<Window x:Class="MemoryTimeline.Views.LocationPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="Select Location on Map"
+        Height="650" Width="850"
+        MinHeight="500" MinWidth="600"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}"
+        FontFamily="Segoe UI">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Controls: Location Name & Coordinates -->
+        <Border Grid.Row="0" Padding="20,16" Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Location Name -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Location Name" Style="{DynamicResource SubHeadingStyle}" FontSize="12" Margin="0,0,0,4"/>
+                    <TextBox x:Name="TxtLocationName" Padding="8,6" FontSize="13"
+                             Background="{DynamicResource CardBrush}"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
+                             BorderBrush="{DynamicResource BorderBrush}"/>
+                </StackPanel>
+
+                <!-- Latitude -->
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Latitude" Style="{DynamicResource SubHeadingStyle}" FontSize="12" Margin="0,0,0,4"/>
+                    <TextBox x:Name="TxtLatitude" Padding="8,6" FontSize="13"
+                             Background="{DynamicResource CardBrush}"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
+                             BorderBrush="{DynamicResource BorderBrush}"/>
+                </StackPanel>
+
+                <!-- Longitude -->
+                <StackPanel Grid.Column="4">
+                    <TextBlock Text="Longitude" Style="{DynamicResource SubHeadingStyle}" FontSize="12" Margin="0,0,0,4"/>
+                    <TextBox x:Name="TxtLongitude" Padding="8,6" FontSize="13"
+                             Background="{DynamicResource CardBrush}"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
+                             BorderBrush="{DynamicResource BorderBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Map Area -->
+        <Grid Grid.Row="1">
+            <!-- Offline / Fallback Note -->
+            <Border x:Name="OfflineNotice" Background="{DynamicResource CardBrush}"
+                    Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Padding="24" CornerRadius="10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                <StackPanel MaxWidth="400">
+                    <TextBlock Text="🗺️ Map Offline Mode" FontSize="16" FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
+                    <TextBlock Text="Unable to load the online Leaflet map. You can still manually enter the location name, latitude, and longitude in the fields above."
+                               Style="{DynamicResource SubHeadingStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                </StackPanel>
+            </Border>
+
+            <!-- WebView2 Map -->
+            <wv2:WebView2 x:Name="MapView"/>
+        </Grid>
+
+        <!-- Bottom Actions -->
+        <Border Grid.Row="2" Padding="20,12" Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="Click anywhere on the map to drop a pin. OpenStreetMap &amp; Leaflet."
+                           Style="{DynamicResource SubHeadingStyle}" FontSize="12" VerticalAlignment="Center"/>
+
+                <Button Grid.Column="1" Content="Cancel" x:Name="BtnCancel"
+                        Padding="18,8" FontSize="13"
+                        Background="{DynamicResource CardBrush}"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                        Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="6"
+                                    Padding="{TemplateBinding Padding}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Grid.Column="3" Content="Confirm Location" x:Name="BtnConfirm"
+                        Style="{DynamicResource AccentButtonStyle}"
+                        Padding="20,8" FontSize="13" FontWeight="SemiBold"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
